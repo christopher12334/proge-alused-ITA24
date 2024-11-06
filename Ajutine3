@@ -15,6 +15,7 @@ def sum_between(start: int, end: int) -> int:
         sum += i
     return sum
 
+
 def sum_of_even_numbers(n: int) -> int:
     """
     Return sum of even numbers from 0 up to n (included).
@@ -22,12 +23,13 @@ def sum_of_even_numbers(n: int) -> int:
     print(sum_of_even_numbers(5)) => 0 + 2 + 4 = 6
     print(sum_of_even_numbers(0)) => 0
     """
+    # Your code goes here
+
     sum = 0
-    for i in range(0, n):
+    for i in range(0, n + 1):
         if i % 2 == 0:
             sum += i
     return sum
-    # Your code goes here
 
 
 def sum_of_multiples(n: int, end: int) -> int:
@@ -40,11 +42,10 @@ def sum_of_multiples(n: int, end: int) -> int:
     """
     sum = 0
     for i in range(n, end + 1):
-        if i % n == 0: 
+        if i % n == 0:
             sum += i
     return sum
 
-### POOLELI SIIN
 
 def cross_sum(numbers: str) -> int:
     """
@@ -59,6 +60,7 @@ def cross_sum(numbers: str) -> int:
         sum += int(numbers[i])
     return sum
 
+
 def multiply_between(start: int, end: int) -> int:
     """
     Multiply all numbers between start and end (both included).
@@ -70,7 +72,7 @@ def multiply_between(start: int, end: int) -> int:
     # Your code goes here
     sum = 1
     for i in range(start, end + 1):
-       sum *= i
+        sum *= i
     return sum
 
 
@@ -82,7 +84,8 @@ def make_hola_string(count: int) -> str:
     print(make_hola_string(0)) => ""
     """
     # Your code goes here
-    return "hola"*count
+    return "hola" * count
+
 
 def compound_interest(amount: int, years: int, rate: int) -> float:
     """
@@ -117,7 +120,7 @@ def remove_vowels(original_string: str) -> str:
 if __name__ == '__main__':
     print(sum_between(3, 5))  # => 3 + 4 + 5 = 12
     print(sum_between(5, 5))  # => 5
-    
+
     print(sum_of_even_numbers(5))  # => 0 + 2 + 4 = 6
     print(sum_of_even_numbers(0))  # => 0
 
@@ -138,7 +141,7 @@ if __name__ == '__main__':
 
     print(compound_interest(100, 2, 2))  # => 104.04
     print(compound_interest(2000, 6, 8))  # => 3173.748645888
-    
+
     print(remove_vowels("tere-tere"))  # => tr-tr
     print(remove_vowels("hklmn"))  # => hklmn
     print(remove_vowels("aauuiii"))  # => """
