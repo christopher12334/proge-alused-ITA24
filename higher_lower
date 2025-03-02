@@ -1,0 +1,113 @@
+import tkinter as tk
+from tkinter import messagebox
+import random
+
+# Autoandmete näidis (nimi ja maks)
+autod = [
+    {"name": "BMW X5", "tax": 500},
+    {"name": "Audi A6", "tax": 450},
+    {"name": "Tesla Model 3", "tax": 300},
+    {"name": "Ford Focus", "tax": 200},
+    {"name": "Mercedes S-Class", "tax": 600}
+]
+
+
+def vali_suvaline_auto(vältida=None):
+    """Valib suvalise auto, mis ei ole vältida listis."""
+    valikud = [auto for auto in autod if auto["name"] not in vältida] if vältida else autod
+    return random.choice(valikud) if valikud else None
+
+
+class AutoMaksuMäng:
+    def __init__(self, root, avaekraan_tagasi):
+        self.root = root
+        self.avaekraan_tagasi = avaekraan_tagasi
+        self.score = 0
+
+        self.frame = tk.Frame(root)
+        self.frame.pack()
+
+        self.pealkiri = tk.Label(self.frame, text="Vali auto, mille maks on suurem!", font=("Arial", 16))
+        self.pealkiri.pack()
+
+        self.auto1 = vali_suvaline_auto()
+        self.auto2 = vali_suvaline_auto(vältida=[self.auto1["name"]])
+
+        self.btn_auto1 = tk.Button(self.frame, text=self.auto1["name"], font=("Arial", 14),
+                                   command=lambda: self.kontrolli_valikut(self.auto1, self.auto2))
+        self.btn_auto1.pack()
+
+        self.vs_label = tk.Label(self.frame, text="VS", font=("Arial", 14))
+        self.vs_label.pack()
+
+        self.btn_auto2 = tk.Button(self.frame, text=self.auto2["name"], font=("Arial", 14),
+                                   command=lambda: self.kontrolli_valikut(self.auto2, self.auto1))
+        self.btn_auto2.pack()
+
+        self.skoor_label = tk.Label(self.frame, text=f"Skoor: {self.score}", font=("Arial", 14))
+        self.skoor_label.pack()
+
+        self.tagasi_nupp = tk.Button(self.frame, text="Tagasi Avaekraanile", command=self.tagasi_avaekraanile)
+        self.tagasi_nupp.pack()
+
+    def kontrolli_valikut(self, valitud, teine):
+        """Kontrollib, kas valitud auto maks on suurem."""
+        messagebox.showinfo("Maksuinfo", f"{valitud['name']}: {valitud['tax']}€, {teine['name']}: {teine['tax']}€")
+        if valitud["tax"] >= teine["tax"]:
+            self.score += 1
+            self.skoor_label.config(text=f"Skoor: {self.score}")
+            self.uus_voor(valitud)
+        else:
+            messagebox.showerror("Vale vastus", "Mäng läbi! Sinu skoor: " + str(self.score))
+            self.restart_game()
+
+    def uus_voor(self, jääv_auto):
+        """Uus voor, kus õige auto jääb ja uus lisandub."""
+        self.auto1 = jääv_auto
+        self.auto2 = vali_suvaline_auto(vältida=[self.auto1["name"]])
+        if self.auto2["tax"] > self.auto1["tax"] * 2:
+            self.auto2 = vali_suvaline_auto(vältida=[self.auto1["name"], self.auto2["name"]])
+
+        self.btn_auto1.config(text=self.auto1["name"], command=lambda: self.kontrolli_valikut(self.auto1, self.auto2))
+        self.btn_auto2.config(text=self.auto2["name"], command=lambda: self.kontrolli_valikut(self.auto2, self.auto1))
+
+    def restart_game(self):
+        """Taaskäivitab mängu."""
+        self.score = 0
+        self.skoor_label.config(text=f"Skoor: {self.score}")
+        self.auto1 = vali_suvaline_auto()
+        self.auto2 = vali_suvaline_auto(vältida=[self.auto1["name"]])
+        self.btn_auto1.config(text=self.auto1["name"], command=lambda: self.kontrolli_valikut(self.auto1, self.auto2))
+        self.btn_auto2.config(text=self.auto2["name"], command=lambda: self.kontrolli_valikut(self.auto2, self.auto1))
+
+    def tagasi_avaekraanile(self):
+        """Sulgeb mängu ja avab tagasi avaekraani."""
+        self.frame.destroy()
+        self.avaekraan_tagasi()
+
+
+class AvaEkraan:
+    def __init__(self, root):
+        self.root = root
+        self.frame = tk.Frame(root)
+        self.frame.pack()
+
+        self.pealkiri = tk.Label(self.frame, text="Tere tulemast automaksu mängu!", font=("Arial", 16))
+        self.pealkiri.pack()
+
+        self.mangu_nupp = tk.Button(self.frame, text="Alusta Mängu", font=("Arial", 14), command=self.alusta_mang)
+        self.mangu_nupp.pack()
+
+    def alusta_mang(self):
+        self.frame.destroy()
+        AutoMaksuMäng(root, self.tagasi_avaekraanile)
+
+    def tagasi_avaekraanile(self):
+        self.__init__(root)
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("Automaksu Mäng")
+    AvaEkraan(root)
+    root.mainloop()
