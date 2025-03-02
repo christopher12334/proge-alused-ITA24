@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-
+from datetime import datetime
 
 class AutomaksKalkulaator:
     def __init__(self, root):
@@ -10,13 +10,12 @@ class AutomaksKalkulaator:
 
         self.soiduki_tuubid = ["Sõiduauto", "Kaubik", "Mootorratas/ATV", "Ratasmaastikusõiduk", "Traktor"]
         self.mootori_tuubid = ["Bensiin", "Diisel", "Elektriline", "Hübriid", "Pistikhübriid"]
-        self.co2_standardid = ["WLTP", "NEDC", "Puudub"]
+        self.co2_standardid = ["WLTP"]
 
         self.create_widgets()
 
     def create_widgets(self):
-        ttk.Label(self.root, text="AUTOMAKSU KALKULAATOR", font=("Arial", 16, "bold"), background="#E6F0FA").pack(
-            pady=10)
+        ttk.Label(self.root, text="AUTOMAKSU KALKULAATOR", font=("Arial", 16, "bold"), background="#E6F0FA").pack(pady=10)
 
         frame = ttk.Frame(self.root, padding=10)
         frame.pack()
@@ -27,8 +26,7 @@ class AutomaksKalkulaator:
         self.soiduki_valik.trace("w", self.update_mootorid)
 
         for i, tuup in enumerate(self.soiduki_tuubid):
-            ttk.Radiobutton(frame, text=tuup, variable=self.soiduki_valik, value=tuup).grid(row=i + 1, column=0,
-                                                                                            sticky="w")
+            ttk.Radiobutton(frame, text=tuup, variable=self.soiduki_valik, value=tuup).grid(row=i + 1, column=0, sticky="w")
 
         self.mootori_valik = tk.StringVar()
         self.mootori_valik.trace("w", self.update_fields)
@@ -39,76 +37,128 @@ class AutomaksKalkulaator:
         self.form_frame = ttk.Frame(self.root, padding=10)
         self.form_frame.pack()
 
+        self.calculate_button = ttk.Button(self.root, text="Arvuta maks", command=self.calculate_tax)
+        self.calculate_button.pack(pady=10)
+
+        self.result_label = ttk.Label(self.root, text="", font=("Arial", 12, "bold"), background="#E6F0FA")
+        self.result_label.pack(pady=10)
+
     def update_mootorid(self, *args):
         for widget in self.mootori_frame.winfo_children():
             widget.destroy()
 
         if self.soiduki_valik.get() in ["Sõiduauto", "Kaubik"]:
-            ttk.Label(self.mootori_frame, text="Vali mootori tüüp:", font=("Arial", 12, "bold")).grid(row=0, column=0,
-                                                                                                      sticky="w")
+            ttk.Label(self.mootori_frame, text="Vali mootori tüüp:", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky="w")
             for i, mootor in enumerate(self.mootori_tuubid):
-                ttk.Radiobutton(self.mootori_frame, text=mootor, variable=self.mootori_valik, value=mootor).grid(
-                    row=i + 1, column=0, sticky="w")
+                ttk.Radiobutton(self.mootori_frame, text=mootor, variable=self.mootori_valik, value=mootor).grid(row=i + 1, column=0, sticky="w")
+        else:
+            self.mootori_valik.set("")
+        self.update_fields()
 
     def update_fields(self, *args):
         for widget in self.form_frame.winfo_children():
             widget.destroy()
 
-        valitud_soiduk = self.soiduki_valik.get()
-        valitud_mootor = self.mootori_valik.get()
+        self.entries = {}
+        vehicle = self.soiduki_valik.get()
 
-        if not valitud_soiduk:
+        if not vehicle:
             return
 
-        fields = ["Esmaregistreerimine"]
+        row = 0
+        ttk.Label(self.form_frame, text="Esmaregistreerimise aasta:", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
+        self.entries["Esmaregistreerimine"] = ttk.Entry(self.form_frame)
+        self.entries["Esmaregistreerimine"].grid(row=row, column=1, sticky="w", pady=2, padx=5)
+        row += 1
 
-        if valitud_soiduk == "Sõiduauto":
-            fields.append("Täismass")
+        if vehicle in ["Sõiduauto", "Kaubik"]:
+            ttk.Label(self.form_frame, text="Täismass (kg):", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
+            self.entries["Täismass"] = ttk.Entry(self.form_frame)
+            self.entries["Täismass"].grid(row=row, column=1, sticky="w", pady=2, padx=5)
+            row += 1
 
-        if valitud_mootor in ["Bensiin", "Diisel", "Hübriid"]:
-            fields.append("CO₂ heitme standard")
-
-        if valitud_soiduk in ["Mootorratas/ATV", "Ratasmaastikusõiduk", "Traktor"]:
-            fields = ["Esmaregistreerimine", "Töömaht (cm³)"]
-
-        for i, field in enumerate(fields):
-            ttk.Label(self.form_frame, text=field + ":", font=("Arial", 10)).grid(row=i, column=0, sticky="w", pady=2)
-            if field == "CO₂ heitme standard":
-                self.co2_valik = tk.StringVar()
-                self.co2_valik.trace("w", self.update_co2_field)
-                for j, std in enumerate(self.co2_standardid):
-                    ttk.Radiobutton(self.form_frame, text=std, variable=self.co2_valik, value=std).grid(row=i,
-                                                                                                        column=j + 2,
-                                                                                                        sticky="w")
-            else:
-                ttk.Entry(self.form_frame).grid(row=i, column=1, sticky="w", pady=2, padx=5)
-
-        self.gkm_field = None
-
-    def update_co2_field(self, *args):
-        for widget in self.form_frame.winfo_children():
-            if hasattr(widget, 'is_extra_field'):
-                widget.destroy()
-
-        if self.co2_valik.get() in ["WLTP", "NEDC"]:
-            ttk.Label(self.form_frame, text="CO₂ heitkogus (g/km):", font=("Arial", 10)).grid(row=5, column=0,
-                                                                                              sticky="w", pady=2)
-            ttk.Entry(self.form_frame).grid(row=5, column=1, sticky="w", padx=5)
-        elif self.co2_valik.get() == "Puudub":
-            ttk.Label(self.form_frame, text="Tühimass:", font=("Arial", 10)).grid(row=6, column=0, sticky="w", pady=2)
-            ttk.Entry(self.form_frame).grid(row=6, column=1, sticky="w", padx=5)
-            ttk.Label(self.form_frame, text="Mootori võimsus:", font=("Arial", 10)).grid(row=7, column=0, sticky="w",
-                                                                                         pady=2)
-            ttk.Entry(self.form_frame).grid(row=7, column=1, sticky="w", padx=5)
-
+            if self.mootori_valik.get() in ["Bensiin", "Diisel", "Hübriid"]:
+                ttk.Label(self.form_frame, text="CO₂ heitkogus (g/km, WLTP):", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
+                self.entries["CO2"] = ttk.Entry(self.form_frame)
+                self.entries["CO2"].grid(row=row, column=1, sticky="w", pady=2, padx=5)
+                row += 1
 
     def calculate_tax(self):
-        total_tax = 50  # Placeholder for actual calculation
-        result_window = tk.Toplevel(self.root)
-        result_window.title("Maksu Tulemus")
-        ttk.Label(result_window, text=f"Arvutatud maksumus: {total_tax:.2f} €", font=("Arial", 12, "bold"),
-                  padding=10).pack(padx=20, pady=20)
+        try:
+            vehicle = self.soiduki_valik.get()
+            reg_year = int(self.entries["Esmaregistreerimine"].get())
+            current_year = datetime.now().year
+            age = current_year - reg_year
+            total_tax = 0
 
+            if vehicle == "Sõiduauto":
+                mass = float(self.entries["Täismass"].get())
+                co2_value = float(self.entries["CO2"].get())
+
+                if co2_value <= 117:
+                    co2_tax = 0
+                elif 118 <= co2_value <= 150:
+                    co2_tax = (co2_value - 117) * 3
+                elif 151 <= co2_value <= 200:
+                    co2_tax = (co2_value - 150) * 3.5 + (150 - 117) * 3
+                else:
+                    co2_tax = (co2_value - 200) * 4 + (200 - 150) * 3.5 + (150 - 117) * 3
+
+                if mass > 2000:
+                    mass_tax = (mass - 2000) * 0.40
+                    if mass > 3000:
+                        mass_tax = 400
+                else:
+                    mass_tax = 0
+
+                total_tax = co2_tax + mass_tax
+
+            # Vanuse kordaja
+            if age >= 20:
+                age_multiplier = 0.00
+
+            elif age >= 16:
+                age_multiplier = 0.10
+
+            elif age >= 15:
+                age_multiplier = 0.18
+
+            elif age >= 14:
+                age_multiplier = 0.26
+
+            elif age >= 13:
+                age_multiplier = 0.35
+
+            elif age >= 12:
+                age_multiplier = 0.43
+
+            elif age >= 11:
+                age_multiplier = 0.51
+
+            elif age >= 10:
+                age_multiplier = 0.59
+
+            elif age >= 9:
+                age_multiplier = 0.67
+
+            elif age >= 8:
+                age_multiplier = 0.75
+
+            elif age >= 7:
+                age_multiplier = 0.84
+
+            elif age >= 6:
+                age_multiplier = 0.92
+
+            else:
+                age_multiplier = 1
+
+            total_tax *= age_multiplier
+            total_tax += 50
+
+            self.result_label.config(text=f"Arvutatud maksumus: {total_tax:.2f} €")
+        except Exception as e:
+            self.result_label.config(text=f"Tekkis viga: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
