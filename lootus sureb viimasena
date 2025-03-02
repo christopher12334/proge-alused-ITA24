@@ -10,7 +10,7 @@ class AutomaksKalkulaator:
 
         self.soiduki_tuubid = ["Sõiduauto", "Kaubik", "Mootorratas/ATV", "Ratasmaastikusõiduk", "Traktor"]
         self.mootori_tuubid = ["Bensiin", "Diisel", "Elektriline", "Hübriid", "Pistikhübriid"]
-        self.co2_standardid = ["WLTP"]
+        self.co2_standardid = ["WLTP", "NEDC", "Puudub"]
 
         self.create_widgets()
 
@@ -83,35 +83,65 @@ class AutomaksKalkulaator:
                 self.entries["CO2"].grid(row=row, column=1, sticky="w", pady=2, padx=5)
                 row += 1
 
+
     def calculate_tax(self):
         try:
             vehicle = self.soiduki_valik.get()
+            mootori_tuup = self.mootori_valik.get()
             reg_year = int(self.entries["Esmaregistreerimine"].get())
             current_year = datetime.now().year
             age = current_year - reg_year
             total_tax = 0
 
-            if vehicle == "Sõiduauto":
-                mass = float(self.entries["Täismass"].get())
-                co2_value = float(self.entries["CO2"].get())
+            if mootori_tuup in ["Bensiin", "Diisel", "Hübriid"]:
 
-                if co2_value <= 117:
-                    co2_tax = 0
-                elif 118 <= co2_value <= 150:
-                    co2_tax = (co2_value - 117) * 3
-                elif 151 <= co2_value <= 200:
-                    co2_tax = (co2_value - 150) * 3.5 + (150 - 117) * 3
-                else:
-                    co2_tax = (co2_value - 200) * 4 + (200 - 150) * 3.5 + (150 - 117) * 3
+                if vehicle == "Sõiduauto":
+                    mass = float(self.entries["Täismass"].get())
+                    co2_value = float(self.entries["CO2"].get())
 
-                if mass > 2000:
-                    mass_tax = (mass - 2000) * 0.40
-                    if mass > 3000:
-                        mass_tax = 400
-                else:
-                    mass_tax = 0
+                    if co2_value <= 117:
+                        co2_tax = 0
+                    elif 118 <= co2_value <= 150:
+                        co2_tax = (co2_value - 117) * 3
+                    elif 151 <= co2_value <= 200:
+                        co2_tax = (co2_value - 150) * 3.5 + (150 - 117) * 3
+                    else:
+                        co2_tax = (co2_value - 200) * 4 + (200 - 150) * 3.5 + (150 - 117) * 3
 
-                total_tax = co2_tax + mass_tax
+                    if mass > 2000:
+                        mass_tax = (mass - 2000) * 0.40
+                        if mass > 3000:
+                            mass_tax = 400
+                    else:
+                        mass_tax = 0
+
+                    total_tax = co2_tax + mass_tax
+
+            if mootori_tuup in ["Elektriline",]:
+
+                if vehicle == "Sõiduauto":
+                    mass = float(self.entries["Täismass"].get())
+                    if mass > 2400:
+                        mass_tax = (mass - 2400) * 0.40
+                        if mass > 3500:
+                            mass_tax = 440
+                    else:
+                        mass_tax = 0
+
+                    total_tax = mass_tax
+
+            if mootori_tuup in ["Pistikhübriid"]:
+
+                if vehicle == "Sõiduauto":
+                    mass = float(self.entries["Täismass"].get())
+                    if mass > 2200:
+                        mass_tax = (mass - 2200) * 0.40
+                        if mass > 3500:
+                            mass_tax = 440
+                    else:
+                        mass_tax = 0
+
+                    total_tax = mass_tax
 
             # Vanuse kordaja
             if age >= 20:
@@ -155,6 +185,9 @@ class AutomaksKalkulaator:
 
             total_tax *= age_multiplier
             total_tax += 50
+
+
+
 
             self.result_label.config(text=f"Arvutatud maksumus: {total_tax:.2f} €")
         except Exception as e:
